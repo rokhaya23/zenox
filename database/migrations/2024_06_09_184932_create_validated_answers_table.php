@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('validated_answers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('answer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('supervisor_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
