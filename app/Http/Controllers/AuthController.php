@@ -25,7 +25,7 @@ class AuthController extends Controller
             ]);
 
             // Recherche du rôle par défaut "Apprenant"
-            $defaultRole = Role::where('name', 'Apprenant')->first();
+            $defaultRole = Role::where('name', 'Superviseur')->first();
 
             if ($defaultRole) {
                 // Assigner le rôle à l'utilisateur
@@ -40,11 +40,16 @@ class AuthController extends Controller
             // Authentification de l'utilisateur
             Auth::login($user);
 
+            // Create an API token for the user
+            $token = $user->createToken('token-name', ['*'])->plainTextToken;
+
+            // Return JSON response
             return response()->json([
-                'status' => 200,
-                'message' => 'Utilisateur enregistré avec succès!',
-                'user' => $user
-            ]);
+                'message' => 'User registered successfully and logged in.',
+                'user' => $user,
+                'token' => $token,
+                'tokenExpiry' => now()->addMinutes(120)->format('Y-m-d H:i:s'),
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 500,
@@ -60,11 +65,11 @@ class AuthController extends Controller
 
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
+                $token=$user->createToken('token-name', ['*'],now()->addMinutes(60))->plainTextToken;
                 return response()->json([
-                    'status' => 200,
-                    'message' => 'Utilisateur connecté avec succès!',
-                    'user' => $user
-                ]);
+                    'token' => $token,
+                    'expireAt' => now()->addMinutes(60)->format('Y-m-d H:i:s'),
+                ],200);
             } else {
                 return response()->json([
                     'status' => 401,
@@ -94,4 +99,18 @@ class AuthController extends Controller
             ], 500);
         }
     }
+    public function refresh()
+    {
+        $user = Auth::user();
+        $user->tokens()->delete();
+        $token=$user->createToken('token-name', ['*'],now()->addMinutes(60))->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'expireAt' => now()->addMinutes(60)->format('Y-m-d H:i:s'),
+        ]);
+
+    }
+
+
 }

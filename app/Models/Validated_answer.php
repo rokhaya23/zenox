@@ -13,7 +13,7 @@ class Validated_answer extends Model
         return $this->belongsTo(Answer::class);
     }
 
-    public function supervisor()
+    public function user()
     {
         return $this->belongsTo(User::class, 'supervisor_id');
     }
